@@ -728,26 +728,6 @@ void menuCitas(vector<CitaMedica>& citas, vector<Medico>& medicos, vector<Pacien
             cout << "Fecha y hora (YYYY-MM-DD HH:MM): ";
             cin.ignore();
             getline(cin, fechaHora);
-
-            vector<string> especialidades = {
-                "Alergologia", "Anatomia Patologica", "Anestesiologia y Reanimacion",
-                "Angiologia y Cirugia Vascular", "Aparato Digestivo", "Cardiologia",
-                "Cirugia Cardiovascular", "Cirugia General y del Aparato Digestivo",
-                "Cirugia Oral y Maxilofacial", "Cirugia Ortopedica y Traumatologia",
-                "Cirugia Pediatrica", "Cirugia Plastica, Estetica y Reparadora",
-                "Cirugía Toracica", "Dermatologia Medico-Quirurgica y Venereologia",
-                "Endocrinologia y Nutricion", "Farmacologia Clinica", "Geriatria",
-                "Hematologia y Hemoterapia", "Inmunologia", "Medicina del Trabajo",
-                "Medicina Familiar y Comunitaria", "Medicina Fisica y Rehabilitacion",
-                "Medicina Intensiva", "Medicina Interna", "Medicina Nuclear",
-                "Medicina Preventiva y Salud Publica", "Nefrologia", "Neumologia",
-                "Neurocirugia", "Neurofisiologia Clinica", "Neurologia",
-                "Obstetricia y Ginecologia", "Oftalmologia", "Oncologia Medica",
-                "Oncología Radioterapica", "Otorrinolaringologia",
-                "Pediatria y sus Areas Especificas", "Psiquiatria", "Radiodiagnostico",
-                "Reumatologia", "Urologia"
-            };
-
             cout << "Elija una especialidad:\n";
             for (size_t i = 0; i < especialidades.size(); ++i) {
                 cout << i + 1 << ". " << especialidades[i] << endl;
@@ -971,25 +951,6 @@ void menuCitas(vector<CitaMedica>& citas, vector<Medico>& medicos, vector<Pacien
             break;
         }
         case 7: {
-            vector<string> especialidades = {
-                "Alergologia", "Anatomia Patologica", "Anestesiologia y Reanimacion",
-                "Angiologia y Cirugia Vascular", "Aparato Digestivo", "Cardiologia",
-                "Cirugia Cardiovascular", "Cirugia General y del Aparato Digestivo",
-                "Cirugia Oral y Maxilofacial", "Cirugia Ortopedica y Traumatologia",
-                "Cirugia Pediatrica", "Cirugia Plastica, Estetica y Reparadora",
-                "Cirugía Toracica", "Dermatologia Medico-Quirurgica y Venereologia",
-                "Endocrinologia y Nutricion", "Farmacologia Clinica", "Geriatria",
-                "Hematologia y Hemoterapia", "Inmunologia", "Medicina del Trabajo",
-                "Medicina Familiar y Comunitaria", "Medicina Fisica y Rehabilitacion",
-                "Medicina Intensiva", "Medicina Interna", "Medicina Nuclear",
-                "Medicina Preventiva y Salud Publica", "Nefrologia", "Neumologia",
-                "Neurocirugia", "Neurofisiologia Clinica", "Neurologia",
-                "Obstetricia y Ginecologia", "Oftalmologia", "Oncologia Medica",
-                "Oncología Radioterapica", "Otorrinolaringologia",
-                "Pediatria y sus Areas Especificas", "Psiquiatria", "Radiodiagnostico",
-                "Reumatologia", "Urologia"
-            };
-
             cout << "Seleccione una especialidad de la lista:\n";
             for (size_t i = 0; i < especialidades.size(); ++i) {
                 cout << i + 1 << ". " << especialidades[i] << "\n";
