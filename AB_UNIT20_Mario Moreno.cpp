@@ -181,6 +181,25 @@ public:
     }
 };
 
+ vector<string> especialidades = {
+                    "Alergologia", "Anatomia Patologica", "Anestesiologia y Reanimacion",
+                    "Angiologia y Cirugia Vascular", "Aparato Digestivo", "Cardiologia",
+                    "Cirugia Cardiovascular", "Cirugia General y del Aparato Digestivo",
+                    "Cirugia Oral y Maxilofacial", "Cirugia Ortopedica y Traumatologia",
+                    "Cirugia Pediatrica", "Cirugia Plastica, Estetica y Reparadora",
+                    "Cirugía Toracica", "Dermatologia Medico-Quirurgica y Venereologia",
+                    "Endocrinologia y Nutricion", "Farmacologia Clinica", "Geriatria",
+                    "Hematologia y Hemoterapia", "Inmunologia", "Medicina del Trabajo",
+                    "Medicina Familiar y Comunitaria", "Medicina Fisica y Rehabilitacion",
+                    "Medicina Intensiva", "Medicina Interna", "Medicina Nuclear",
+                    "Medicina Preventiva y Salud Publica", "Nefrologia", "Neumologia",
+                    "Neurocirugia", "Neurofisiologia Clinica", "Neurologia",
+                    "Obstetricia y Ginecologia", "Oftalmologia", "Oncologia Medica",
+                    "Oncología Radioterapica", "Otorrinolaringologia",
+                    "Pediatria y sus Areas Especificas", "Psiquiatria", "Radiodiagnostico",
+                    "Reumatologia", "Urologia"
+                };
+
 // Clase para médicos
 class Medico {
 public:
@@ -189,42 +208,104 @@ public:
     string dni;
     string especialidad;
     bool disponible;
-    vector<Paciente*> pacientesAsignados;
 
     Medico(string nombre, string apellidos, string dni, bool disponible)
         : nombre(nombre), apellidos(apellidos), dni(dni), disponible(disponible) {
     }
 
-    void altaMedico() {
-        if (!disponible) {
-            disponible = true;
-            cout << "El medico " << nombre << apellidos << " ha sido dado de alta y ahora está disponible.\n";
+    void modificarDatos(vector<Medico>& medicos) {
+        int opcion;
+        do {
+            cout << "Seleccione el campo que desea modificar:\n";
+            cout << "1. Nombre\n";
+            cout << "2. Apellidos\n";
+            cout << "3. DNI\n";
+            cout << "4. Disponibilidad\n";
+            cout << "0. Salir\n";
+            cout << "Ingrese su opcion: ";
+            cin >> opcion;
+
+            switch (opcion) {
+            case 1:
+                cout << "Ingrese el nuevo nombre: ";
+                cin >> nombre;
+                break;
+            case 2:
+                cout << "Ingrese los nuevos apellidos: ";
+                cin >> apellidos;
+                break;
+            case 3: {
+                string nuevoDni;
+                cout << "Ingrese el nuevo DNI: ";
+                cin >> nuevoDni;
+
+                auto it = find_if(medicos.begin(), medicos.end(), [&nuevoDni](const Medico& m) { return m.dni == nuevoDni; });
+                if (it != medicos.end()) {
+                    cout << "Error: Ya existe un medico con ese DNI.\n";
+                }
+                else {
+                    dni = nuevoDni;
+                    cout << "DNI actualizado correctamente.\n";
+                }
+                break;
+            }
+            case 4:
+                cout << "Ingrese la nueva disponibilidad (1 para si, 0 para no): ";
+                cin >> disponible;
+                break;
+            case 0:
+                cout << "Saliendo de la modificacion de datos.\n";
+                break;
+            default:
+                cout << "Opcion no valida.\n";
+            }
+        } while (opcion != 0);
+
+        cout << "Los datos del medico han sido actualizados.\n";
+    }
+
+    void asignarEspecialidad(const vector<string>& especialidades) {
+        cout << "Seleccione la especialidad:\n";
+        for (size_t i = 0; i < especialidades.size(); ++i) {
+            cout << i + 1 << ". " << especialidades[i] << '\n';
+        }
+        int seleccion;
+        cout << "Seleccione una opcion (1-" << especialidades.size() << "): ";
+        cin >> seleccion;
+        if (seleccion >= 1 && seleccion <= especialidades.size()) {
+            especialidad = especialidades[seleccion - 1];
+            cout << "Especialidad asignada: " << especialidad << '\n';
         }
         else {
-            cout << "El medico " << nombre << apellidos << " ha sido dado de alta.\n";
+            cout << "Opcion no valida.\n";
         }
+    }
+
+    void altaMedico() {
+        disponible = true;
+        cout << "El medico " << nombre << " " << apellidos << " ha sido dado de alta y ahora esta disponible.\n";
     }
 
     void bajaMedico() {
-        if (disponible) {
-            disponible = false;
-            cout << "El medico " << nombre << apellidos << " ha sido dado de baja y ahora no esta disponible.\n";
-        }
-        else {
-            cout << "El médico " << nombre << apellidos << " ha sido dado de baja.\n";
-        }
+        disponible = false;
+        cout << "El medico " << nombre << " " << apellidos << " ha sido dado de baja y ahora no esta disponible.\n";
     }
 
-    void modificarDatos() {
-        cout << "Modificar datos del medico.\n";
-        cout << "Nuevo nombre: ";
-        cin >> nombre;
-        cout << "Nuevos apellidos: ";
-        cin >> apellidos;
-        cout << "Nuevo DNI: ";
-        cin >> dni;
-        cout << "Medico disponible (1 para si, 0 para no): ";
-        cin >> disponible;
+    static void listarMedicos(const vector<Medico>& medicos, bool disponibilidad) {
+        vector<const Medico*> filtrados;
+        for (const auto& medico : medicos) {
+            if (medico.disponible == disponibilidad) {
+                filtrados.push_back(&medico);
+            }
+        }
+        sort(filtrados.begin(), filtrados.end(), [](const Medico* a, const Medico* b) {
+            return a->especialidad < b->especialidad;
+            });
+
+        cout << "--- Lista de medicos " << (disponibilidad ? "disponibles" : "no disponibles") << " ---\n";
+        for (const auto* medico : filtrados) {
+            cout << medico->nombre << " " << medico->apellidos << " - Especialidad: " << medico->especialidad << '\n';
+        }
     }
 };
 
@@ -512,7 +593,6 @@ void menuPacientes(vector<Paciente>& pacientes) {
     } while (opcion != 8);
 }
 
-
 // Menú médicos
 void menuMedicos(vector<Medico>& medicos) {
     short int opcion;
@@ -531,7 +611,7 @@ void menuMedicos(vector<Medico>& medicos) {
 
         switch (opcion) {
         case 1: {
-            string nombre, apellidos, dni, especialidad;
+            string nombre, apellidos, dni;
             bool disponible;
             cout << "Ingrese nombre: ";
             cin >> nombre;
@@ -539,10 +619,17 @@ void menuMedicos(vector<Medico>& medicos) {
             cin >> apellidos;
             cout << "Ingrese DNI: ";
             cin >> dni;
-            cout << "Medico disponible (1 para si, 0 para no): ";
-            cin >> disponible;
-            medicos.emplace_back(nombre, apellidos, dni, disponible);
-            cout << "Medico registrado.\n";
+
+            auto it = find_if(medicos.begin(), medicos.end(), [&dni](const Medico& m) { return m.dni == dni; });
+            if (it != medicos.end()) {
+                cout << "Error: Ya existe un medico con ese DNI.\n";
+            }
+            else {
+                cout << "Medico disponible (1 para si, 0 para no): ";
+                cin >> disponible;
+                medicos.emplace_back(nombre, apellidos, dni, disponible);
+                cout << "Medico registrado.\n";
+            }
             break;
         }
         case 2: {
@@ -551,7 +638,7 @@ void menuMedicos(vector<Medico>& medicos) {
             cin >> dni;
             auto it = find_if(medicos.begin(), medicos.end(), [&dni](Medico& m) { return m.dni == dni; });
             if (it != medicos.end()) {
-                it->modificarDatos();
+                it->modificarDatos(medicos);
             }
             else {
                 cout << "Medico no encontrado.\n";
@@ -564,77 +651,19 @@ void menuMedicos(vector<Medico>& medicos) {
             cin >> dni;
             auto it = find_if(medicos.begin(), medicos.end(), [&dni](Medico& m) { return m.dni == dni; });
             if (it != medicos.end()) {
-                cout << "Seleccione la especialidad:\n";
-                vector<string> especialidades = {
-                    "Alergologia", "Anatomia Patologica", "Anestesiologia y Reanimacion",
-                    "Angiologia y Cirugia Vascular", "Aparato Digestivo", "Cardiologia",
-                    "Cirugia Cardiovascular", "Cirugia General y del Aparato Digestivo",
-                    "Cirugia Oral y Maxilofacial", "Cirugia Ortopedica y Traumatologia",
-                    "Cirugia Pediatrica", "Cirugia Plastica, Estetica y Reparadora",
-                    "Cirugía Toracica", "Dermatologia Medico-Quirurgica y Venereologia",
-                    "Endocrinologia y Nutricion", "Farmacologia Clinica", "Geriatria",
-                    "Hematologia y Hemoterapia", "Inmunologia", "Medicina del Trabajo",
-                    "Medicina Familiar y Comunitaria", "Medicina Fisica y Rehabilitacion",
-                    "Medicina Intensiva", "Medicina Interna", "Medicina Nuclear",
-                    "Medicina Preventiva y Salud Publica", "Nefrologia", "Neumologia",
-                    "Neurocirugia", "Neurofisiologia Clinica", "Neurologia",
-                    "Obstetricia y Ginecologia", "Oftalmologia", "Oncologia Medica",
-                    "Oncología Radioterapica", "Otorrinolaringologia",
-                    "Pediatria y sus Areas Especificas", "Psiquiatria", "Radiodiagnostico",
-                    "Reumatologia", "Urologia"
-                };
-                for (size_t i = 0; i < especialidades.size(); ++i) {
-                    cout << i + 1 << ". " << especialidades[i] << '\n';
-                }
-                int seleccion;
-                cout << "Seleccione una opcion (1-" << especialidades.size() << "): ";
-                cin >> seleccion;
-                if (seleccion >= 1 && seleccion <= especialidades.size()) {
-                    it->especialidad = especialidades[seleccion - 1];
-                    cout << "Especialidad asignada: " << it->especialidad << '\n';
-                }
-                else {
-                    cout << "Opcion no valida.\n";
-                }
+                it->asignarEspecialidad(especialidades);
             }
             else {
                 cout << "Medico no registrado.\n";
             }
             break;
         }
-        case 4: {
-            vector<Medico*> disponibles;
-            for (auto& medico : medicos) {
-                if (medico.disponible) {
-                    disponibles.push_back(&medico);
-                }
-            }
-            sort(disponibles.begin(), disponibles.end(),
-                [](Medico* a, Medico* b) { return a->especialidad < b->especialidad; });
-            cout << "--- Lista de medicos disponibles ---\n";
-            for (auto* medico : disponibles) {
-                cout << medico->nombre << " " << medico->apellidos
-                    << " - Especialidad: " << medico->especialidad << '\n';
-            }
+        case 4:
+            Medico::listarMedicos(medicos, true);
             break;
-        }
-        case 5: {
-            vector<Medico*> noDisponibles;
-            for (auto& medico : medicos) {
-                if (!medico.disponible) {
-                    noDisponibles.push_back(&medico);
-                }
-            }
-            sort(noDisponibles.begin(), noDisponibles.end(),
-                [](Medico* a, Medico* b) { return a->especialidad < b->especialidad; });
-            cout << "--- Lista de Medicos No Disponibles ---\n";
-            for (auto* medico : noDisponibles) {
-                cout << medico->nombre << " " << medico->apellidos
-                    << " - Especialidad: " << medico->especialidad << '\n';
-            }
+        case 5:
+            Medico::listarMedicos(medicos, false);
             break;
-        }
-
         case 6: {
             string dni;
             cout << "Ingrese el DNI del medico para dar de alta: ";
@@ -664,10 +693,11 @@ void menuMedicos(vector<Medico>& medicos) {
         case 8:
             break;
         default:
-            cout << "Opción no valida.\n";
+            cout << "Opcion no valida.\n";
         }
     } while (opcion != 8);
 }
+
 
 // Menú citas médicas
 void menuCitas(vector<CitaMedica>& citas, vector<Medico>& medicos, vector<Paciente>& pacientes) {
