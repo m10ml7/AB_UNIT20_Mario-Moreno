@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <set>
+#include <fstream>
 
 using namespace std;
 
@@ -25,6 +26,15 @@ public:
 
     Paciente(string nombre, string apellidos, string dni, string fechaIngreso, string enfermedad = "")
         : nombre(nombre), apellidos(apellidos), dni(dni), fechaIngreso(fechaIngreso), enfermedad(enfermedad) {
+    }
+
+    // Constructor
+    Paciente(const string& nombre, const string& apellidos, const string& dni,
+        const string& fechaIngreso, const string& enfermedad,
+        const vector<string>& historialClinico)
+        : nombre(nombre), apellidos(apellidos), dni(dni),
+        fechaIngreso(fechaIngreso), enfermedad(enfermedad),
+        historialClinico(historialClinico) {
     }
 
     void altaPaciente() {
@@ -57,7 +67,60 @@ public:
         for (const auto& registro : historialClinico)
             cout << "- " << registro << "\n";
     }
+
+    // Método para convertir los datos del paciente en una línea CSV
+    string toCSV() const {
+        string csv = nombre + "," + apellidos + "," + dni + "," +
+            fechaIngreso + "," + enfermedad + ",";
+        for (size_t i = 0; i < historialClinico.size(); ++i) {
+            csv += historialClinico[i];
+            if (i < historialClinico.size() - 1) {
+                csv += ";"; // Separador para el historial clínico
+            }
+        }
+        return csv;
+    }
 };
+
+// Función para guardar pacientes en un archivo CSV
+void guardarPacientesEnCSV(const string& nombreArchivo, const vector<Paciente>& pacientes) {
+    ofstream archivo(nombreArchivo);
+
+    if (!archivo.is_open()) {
+        cerr << "No se pudo crear el archivo." << endl;
+        return;
+    }
+
+    // Escribir encabezados
+    archivo << "Nombre,Apellidos,DNI,FechaIngreso,Enfermedad,HistorialClinico\n";
+
+    // Escribir datos de cada paciente
+    for (const auto& paciente : pacientes) {
+        archivo << paciente.toCSV() << "\n";
+    }
+
+    archivo.close();
+    cout << "Archivo creado y datos guardados correctamente: " << nombreArchivo << endl;
+}
+
+// Función para leer y mostrar el contenido del archivo CSV
+void leerArchivoCSV(const string& nombreArchivo) {
+    ifstream archivo(nombreArchivo);
+
+    if (!archivo.is_open()) {
+        cerr << "No se pudo abrir el archivo." << endl;
+        return;
+    }
+
+    string linea;
+    while (getline(archivo, linea)) {
+        cout << linea << endl;
+    }
+
+    archivo.close();
+}
+
+
 
 // Clase para médicos
 class Medico {
@@ -995,5 +1058,21 @@ void menuPrincipal() {
 // Main
 int main() {
     menuPrincipal();
+    // Nombre del archivo CSV
+    string nombreArchivo = "pacientes.csv";
+
+    vector<Paciente> pacientes = {
+    Paciente("Juan", "Pérez", "12345678A", "2024-01-15", "Gripe", {"Consulta inicial", "Tratamiento antiviral"}),
+    Paciente("Ana", "Gómez", "98765432B", "2024-02-10", "Fractura", {"Radiografía", "Cirugía", "Rehabilitación"}),
+    Paciente("Luis", "Martínez", "45678901C", "2024-03-05", "Diabetes", {"Control mensual", "Análisis de sangre"})
+    };
+
+    // Guardar datos de los pacientes en el archivo CSV
+    guardarPacientesEnCSV(nombreArchivo, pacientes);
+
+    // Leer y mostrar el contenido del archivo CSV
+    cout << "Contenido del archivo creado:\n";
+    leerArchivoCSV(nombreArchivo);
+
     return 0;
 }
