@@ -9,7 +9,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <set>
-#include <fstream>
 
 using namespace std;
 
@@ -24,17 +23,83 @@ public:
     string enfermedad;
     vector<string> historialClinico;
 
+    // Constructor principal
     Paciente(string nombre, string apellidos, string dni, string fechaIngreso, string enfermedad = "")
         : nombre(nombre), apellidos(apellidos), dni(dni), fechaIngreso(fechaIngreso), enfermedad(enfermedad) {
     }
 
-    // Constructor
-    Paciente(const string& nombre, const string& apellidos, const string& dni,
-        const string& fechaIngreso, const string& enfermedad,
-        const vector<string>& historialClinico)
-        : nombre(nombre), apellidos(apellidos), dni(dni),
-        fechaIngreso(fechaIngreso), enfermedad(enfermedad),
-        historialClinico(historialClinico) {
+    void modificarDatos(vector<Paciente>& pacientes) {
+        cout << "Modificar datos del paciente.\n";
+        bool continuar = true;
+
+        while (continuar) {
+            cout << "Seleccione el campo que desea modificar:\n";
+            cout << "1. Nombre\n";
+            cout << "2. Apellidos\n";
+            cout << "3. DNI\n";
+            cout << "4. Fecha de ingreso\n";
+            cout << "5. Enfermedad\n";
+            cout << "6. Finalizar modificaciones\n";
+            cout << "Seleccione una opcion: ";
+
+            int opcion;
+            cin >> opcion;
+
+            switch (opcion) {
+            case 1:
+                cout << "Nuevo nombre: ";
+                cin >> nombre;
+                break;
+            case 2:
+                cout << "Nuevos apellidos: ";
+                cin.ignore();
+                getline(cin, apellidos);
+                break;
+            case 3: {
+                string nuevoDNI;
+                cout << "Nuevo DNI: ";
+                cin >> nuevoDNI;
+
+                // Verificar si el DNI ya existe
+                bool dniDuplicado = any_of(pacientes.begin(), pacientes.end(), [&nuevoDNI, this](const Paciente& p) {
+                    return p.dni == nuevoDNI && p.dni != this->dni; // Excluir el paciente actual
+                    });
+
+                if (dniDuplicado) {
+                    cout << "Error: El DNI ingresado ya pertenece a otro paciente. Intente nuevamente.\n";
+                }
+                else {
+                    dni = nuevoDNI;
+                    cout << "DNI actualizado correctamente.\n";
+                }
+                break;
+            }
+            case 4:
+                cout << "Nueva fecha de ingreso: ";
+                cin.ignore();
+                getline(cin, fechaIngreso);
+                break;
+            case 5:
+                cout << "Nueva enfermedad: ";
+                cin.ignore();
+                getline(cin, enfermedad);
+                break;
+            case 6:
+                continuar = false;
+                break;
+            default:
+                cout << "Opción no valida. Intente nuevamente.\n";
+            }
+
+            if (continuar) {
+                cout << "¿Desea cambiar otro campo? (S/N): ";
+                char respuesta;
+                cin >> respuesta;
+                continuar = toupper(respuesta) == 'S';
+            }
+        }
+
+        cout << "Datos modificados correctamente.\n";
     }
 
     void altaPaciente() {
@@ -45,82 +110,76 @@ public:
         cout << "El paciente " << nombre << " ha sido dado de baja.\n";
     }
 
-    void modificarDatos() {
-        cout << "Modificar datos del paciente.\n";
-        cout << "Nuevo nombre: ";
-        cin >> nombre;
-        cout << "Nuevos apellidos: ";
-        cin >> apellidos;
-        cout << "Nuevo DNI: ";
-        cin >> dni;
-        cout << "Nueva enfermedad: ";
-        cin.ignore();
-        getline(cin, enfermedad);
-    }
-
     void registrarHistorial(string registro) {
         historialClinico.push_back(registro);
     }
 
-    void mostrarHistorial() {
+    void mostrarHistorial() const {
         cout << "Historial clinico de " << nombre << ":\n";
-        for (const auto& registro : historialClinico)
+        for (const auto& registro : historialClinico) {
             cout << "- " << registro << "\n";
+        }
     }
 
-    // Método para convertir los datos del paciente en una línea CSV
-    string toCSV() const {
-        string csv = nombre + "," + apellidos + "," + dni + "," +
-            fechaIngreso + "," + enfermedad + ",";
-        for (size_t i = 0; i < historialClinico.size(); ++i) {
-            csv += historialClinico[i];
-            if (i < historialClinico.size() - 1) {
-                csv += ";"; // Separador para el historial clínico
+    void gestionarEnfermedadCronica() {
+        string enfermedadCronica, descripcion;
+        cout << "Paciente: " << nombre << " " << apellidos << "\n";
+
+        if (enfermedad.empty()) {
+            cout << "El paciente no tiene una enfermedad registrada.\n";
+            return;
+        }
+
+        cout << "Enfermedad actual registrada: " << enfermedad << "\n";
+        cout << "¿Desea modificar esta enfermedad? (S/N): ";
+        char opcionEnfermedad;
+        cin >> opcionEnfermedad;
+        if (toupper(opcionEnfermedad) == 'S') {
+            cout << "Ingrese el nuevo nombre de la enfermedad cronica: ";
+            cin.ignore();
+            getline(cin, enfermedadCronica);
+            enfermedad = enfermedadCronica;
+        }
+        else {
+            enfermedadCronica = enfermedad;
+        }
+
+        bool descripcionExistente = false;
+        for (auto& registro : historialClinico) {
+            if (registro.find("Enfermedad cronica registrada: " + enfermedad) != string::npos) {
+                cout << "Descripcion actual encontrada en el historial:\n" << registro << "\n";
+                descripcionExistente = true;
+                cout << "¿Desea modificar la descripcion? (S/N): ";
+                char opcionModificarDescripcion;
+                cin >> opcionModificarDescripcion;
+                if (toupper(opcionModificarDescripcion) == 'S') {
+                    cout << "Ingrese la nueva descripcion de la enfermedad: ";
+                    cin.ignore();
+                    getline(cin, descripcion);
+                    registro = "Enfermedad cronica registrada: " + enfermedadCronica + " - " + descripcion;
+                    cout << "Nueva descripcion registrada exitosamente.\n";
+                }
+                break;
             }
         }
-        return csv;
+
+        if (!descripcionExistente) {
+            cout << "No hay descripción actual de la enfermedad.\n";
+            cout << "¿Desea agregar una descripcion? (S/N): ";
+            char opcionDescripcion;
+            cin >> opcionDescripcion;
+            if (toupper(opcionDescripcion) == 'S') {
+                cout << "Ingrese la descripcion de la enfermedad: ";
+                cin.ignore();
+                getline(cin, descripcion);
+                registrarHistorial("Enfermedad cronica registrada: " + enfermedadCronica + " - " + descripcion);
+            }
+            else {
+                registrarHistorial("Enfermedad cronica registrada: " + enfermedadCronica);
+            }
+        }
     }
 };
-
-// Función para guardar pacientes en un archivo CSV
-void guardarPacientesEnCSV(const string& nombreArchivo, const vector<Paciente>& pacientes) {
-    ofstream archivo(nombreArchivo);
-
-    if (!archivo.is_open()) {
-        cerr << "No se pudo crear el archivo." << endl;
-        return;
-    }
-
-    // Escribir encabezados
-    archivo << "Nombre,Apellidos,DNI,FechaIngreso,Enfermedad,HistorialClinico\n";
-
-    // Escribir datos de cada paciente
-    for (const auto& paciente : pacientes) {
-        archivo << paciente.toCSV() << "\n";
-    }
-
-    archivo.close();
-    cout << "Archivo creado y datos guardados correctamente: " << nombreArchivo << endl;
-}
-
-// Función para leer y mostrar el contenido del archivo CSV
-void leerArchivoCSV(const string& nombreArchivo) {
-    ifstream archivo(nombreArchivo);
-
-    if (!archivo.is_open()) {
-        cerr << "No se pudo abrir el archivo." << endl;
-        return;
-    }
-
-    string linea;
-    while (getline(archivo, linea)) {
-        cout << linea << endl;
-    }
-
-    archivo.close();
-}
-
-
 
 // Clase para médicos
 class Medico {
@@ -342,14 +401,25 @@ void menuPacientes(vector<Paciente>& pacientes) {
             getline(cin, apellidos);
             cout << "Ingrese DNI: ";
             cin >> dni;
-            cout << "Ingrese fecha de ingreso (si hay): ";
-            cin.ignore();
-            getline(cin, fechaIngreso);
-            cout << "Ingrese enfermedad (opcional): ";
-            cin.ignore();
-            getline(cin, enfermedad);
-            pacientes.emplace_back(nombre, apellidos, dni, fechaIngreso, enfermedad);
-            cout << "Paciente registrado.\n";
+
+            // Verificar si el DNI ya existe
+            bool dniDuplicado = any_of(pacientes.begin(), pacientes.end(), [&dni](const Paciente& p) {
+                return p.dni == dni;
+                });
+
+            if (dniDuplicado) {
+                cout << "Error: El DNI ingresado ya pertenece a otro paciente. Registro cancelado.\n";
+            }
+            else {
+                cout << "Ingrese fecha de ingreso (no si hay): ";
+                cin.ignore();
+                getline(cin, fechaIngreso);
+                cout << "Ingrese enfermedad (opcional): ";
+                cin.ignore();
+                getline(cin, enfermedad);
+                pacientes.emplace_back(nombre, apellidos, dni, fechaIngreso, enfermedad);
+                cout << "Paciente registrado.\n";
+            }
             break;
         }
         case 2: {
@@ -358,7 +428,7 @@ void menuPacientes(vector<Paciente>& pacientes) {
             cin >> dni;
             auto it = find_if(pacientes.begin(), pacientes.end(), [&dni](Paciente& p) { return p.dni == dni; });
             if (it != pacientes.end()) {
-                it->modificarDatos();
+                it->modificarDatos(pacientes); // Pasamos el vector pacientes como argumento
             }
             else {
                 cout << "Paciente no encontrado.\n";
@@ -367,7 +437,7 @@ void menuPacientes(vector<Paciente>& pacientes) {
         }
         case 3: {
             string dni;
-            cout << "Ingrese el DNI del paciente para dar de alta medica: ";
+            cout << "Ingrese el DNI del paciente para dar de alta médica: ";
             cin >> dni;
             auto it = find_if(pacientes.begin(), pacientes.end(), [&dni](Paciente& p) { return p.dni == dni; });
             if (it != pacientes.end()) {
@@ -380,7 +450,7 @@ void menuPacientes(vector<Paciente>& pacientes) {
         }
         case 4: {
             string dni;
-            cout << "Ingrese el DNI del paciente para dar de baja medica: ";
+            cout << "Ingrese el DNI del paciente para dar de baja médica: ";
             cin >> dni;
             auto it = find_if(pacientes.begin(), pacientes.end(), [&dni](Paciente& p) { return p.dni == dni; });
             if (it != pacientes.end()) {
@@ -397,7 +467,7 @@ void menuPacientes(vector<Paciente>& pacientes) {
             cin >> dni;
             auto it = find_if(pacientes.begin(), pacientes.end(), [&dni](Paciente& p) { return p.dni == dni; });
             if (it != pacientes.end()) {
-                cout << "Ingrese el registro para el historial clinico: ";
+                cout << "Ingrese el registro para el historial clínico: ";
                 cin.ignore();
                 getline(cin, registro);
                 it->registrarHistorial(registro);
@@ -421,87 +491,27 @@ void menuPacientes(vector<Paciente>& pacientes) {
             break;
         }
         case 7: {
-            string dni, enfermedadCronica, descripcion;
+            string dni;
             cout << "Ingrese el DNI del paciente: ";
             cin >> dni;
             auto it = find_if(pacientes.begin(), pacientes.end(), [&dni](Paciente& p) { return p.dni == dni; });
             if (it != pacientes.end()) {
-                cout << "Paciente encontrado: " << it->nombre << " " << it->apellidos << "\n";
-
-                if (it->enfermedad.empty()) {
-                    cout << "El paciente no tiene una enfermedad registrada.\n";
-                    break;
-                }
-                cout << "Enfermedad actual registrada: " << it->enfermedad << "\n";
-                cout << "¿Desea modificar esta enfermedad? (S/N): ";
-                char opcionEnfermedad;
-                cin >> opcionEnfermedad;
-                if (toupper(opcionEnfermedad) == 'S') {
-                    cout << "Ingrese el nuevo nombre de la enfermedad cronica: ";
-                    cin.ignore();
-                    getline(cin, enfermedadCronica);
-                    it->enfermedad = enfermedadCronica;
-                }
-                else {
-                    enfermedadCronica = it->enfermedad;
-                }
-
-                bool descripcionExistente = false;
-                for (auto& registro : it->historialClinico) {
-                    if (registro.find("Enfermedad cronica registrada: " + it->enfermedad) != string::npos) {
-                        cout << "Descripcion actual encontrada en el historial:\n" << registro << "\n";
-                        descripcionExistente = true;
-                        cout << "¿Desea modificar la descripcion? (S/N): ";
-                        char opcionModificarDescripcion;
-                        cin >> opcionModificarDescripcion;
-                        if (toupper(opcionModificarDescripcion) == 'S') {
-                            cout << "Ingrese la nueva descripcion de la enfermedad: ";
-                            cin.ignore();
-                            getline(cin, descripcion);
-                            registro = "Enfermedad cronica registrada: " + enfermedadCronica + " - " + descripcion; // Modifica el historial directamente
-                            cout << "Nueva descripcion registrada exitosamente.\n";
-                            cout << "Nueva descripcion: " << registro << "\n";
-                        }
-                        else {
-                            cout << "Manteniendo la descripcion actual.\n";
-                        }
-                        break;
-                    }
-                }
-
-                if (!descripcionExistente) {
-                    cout << "No hay descripcion actual de la enfermedad.\n";
-                    cout << "¿Desea agregar una descripcion? (S/N): ";
-                    char opcionDescripcion;
-                    cin >> opcionDescripcion;
-                    if (toupper(opcionDescripcion) == 'S') {
-                        cout << "Ingrese la descripcion de la enfermedad: ";
-                        cin.ignore();
-                        getline(cin, descripcion);
-                        it->registrarHistorial("Enfermedad cronica registrada: " + enfermedadCronica + " - " + descripcion);
-                        cout << "Descripción registrada.\n";
-                        cout << "Nueva descripción: enfermedad cronica" << enfermedadCronica << " : " << descripcion << "\n";
-                    }
-                    else {
-                        it->registrarHistorial("Enfermedad cronica registrada: " + enfermedadCronica);
-                        cout << "Enfermedad registrada sin descripción adicional.\n";
-                        break;
-                    }
-                }
+                it->gestionarEnfermedadCronica();
             }
             else {
                 cout << "Paciente no encontrado.\n";
             }
             break;
         }
-
         case 8:
+            cout << "Volviendo al menú principal.\n";
             break;
         default:
             cout << "Opción no válida.\n";
         }
     } while (opcion != 8);
 }
+
 
 // Menú médicos
 void menuMedicos(vector<Medico>& medicos) {
@@ -1058,21 +1068,5 @@ void menuPrincipal() {
 // Main
 int main() {
     menuPrincipal();
-    // Nombre del archivo CSV
-    string nombreArchivo = "pacientes.csv";
-
-    vector<Paciente> pacientes = {
-    Paciente("Juan", "Pérez", "12345678A", "2024-01-15", "Gripe", {"Consulta inicial", "Tratamiento antiviral"}),
-    Paciente("Ana", "Gómez", "98765432B", "2024-02-10", "Fractura", {"Radiografía", "Cirugía", "Rehabilitación"}),
-    Paciente("Luis", "Martínez", "45678901C", "2024-03-05", "Diabetes", {"Control mensual", "Análisis de sangre"})
-    };
-
-    // Guardar datos de los pacientes en el archivo CSV
-    guardarPacientesEnCSV(nombreArchivo, pacientes);
-
-    // Leer y mostrar el contenido del archivo CSV
-    cout << "Contenido del archivo creado:\n";
-    leerArchivoCSV(nombreArchivo);
-
     return 0;
 }
