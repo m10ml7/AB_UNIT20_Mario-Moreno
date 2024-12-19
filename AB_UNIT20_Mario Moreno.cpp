@@ -965,7 +965,7 @@ void menuPrincipal() {
         cout << "1. Gestionar pacientes\n";
         cout << "2. Gestionar medicos\n";
         cout << "3. Gestionar citas medicas\n";
-        cout << "4. Servicios\n";
+        cout << "4. Gestiones varias (sin uso de momento)\n";
         cout << "5. Salir\n";
         cout << "Seleccione una opcion: ";
         cin >> opcion;
