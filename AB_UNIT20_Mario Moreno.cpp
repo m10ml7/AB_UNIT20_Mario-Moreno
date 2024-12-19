@@ -115,10 +115,10 @@ public:
     Medico* medico;
     Paciente* paciente;
     short int nivelUrgencia;
+    string estado; // Puede ser "pendiente" o "atendida"
 
     CitaMedica(string id, string fechaHora, string especialidad, Medico* medico, Paciente* paciente, short int nivelUrgencia)
-        :id(id), fechaHora(fechaHora), especialidad(especialidad), medico(medico), paciente(paciente), nivelUrgencia(nivelUrgencia) {
-    }
+        : id(id), fechaHora(fechaHora), especialidad(especialidad), medico(medico), paciente(paciente), nivelUrgencia(nivelUrgencia), estado("pendiente") {}
 
     void modificarCita() {
         cout << "Modificar datos de la cita.\n";
@@ -134,9 +134,87 @@ public:
             if (a.fechaHora != b.fechaHora)
                 return a.fechaHora < b.fechaHora;
             return a.nivelUrgencia > b.nivelUrgencia;
-            });
+        });
+    }
+
+    static void listarCitasPendientesPorEspecialidad(vector<CitaMedica>& citas, const string& horaActual) {
+        // Actualizar el estado de citas según la hora actual
+        for (auto& cita : citas) {
+            if (cita.estado == "pendiente" && horaActual > cita.fechaHora) {
+                cita.estado = "expirada";
+            }
+        }
+
+        // Filtrar y ordenar las citas pendientes por especialidad
+        vector<CitaMedica> pendientes;
+        copy_if(citas.begin(), citas.end(), back_inserter(pendientes), [](CitaMedica& cita) {
+            return cita.estado == "pendiente";
+        });
+
+        sort(pendientes.begin(), pendientes.end(), [](CitaMedica& a, CitaMedica& b) {
+            return a.especialidad < b.especialidad;
+        });
+
+        // Imprimir las citas pendientes
+        cout << "Citas pendientes por especialidad:\n";
+        for (const auto& cita : pendientes) {
+            cout << "ID: " << cita.id << " | Especialidad: " << cita.especialidad << " | Fecha y Hora: " << cita.fechaHora << " | Paciente: " << cita.paciente->nombre << "\n";
+        }
+    }
+
+    static void listarPacientesAtendidosEntreFechas(const vector<CitaMedica>& citas, const string& fechaInicio, const string& fechaFin) {
+        // Filtrar y ordenar las citas atendidas dentro del rango de fechas
+        vector<CitaMedica> atendidas;
+        copy_if(citas.begin(), citas.end(), back_inserter(atendidas), [&](const CitaMedica& cita) {
+            return cita.estado == "atendida" && cita.fechaHora >= fechaInicio && cita.fechaHora <= fechaFin;
+        });
+
+        sort(atendidas.begin(), atendidas.end(), [](CitaMedica& a, CitaMedica& b) {
+            return a.fechaHora > b.fechaHora; // Más reciente a más antiguo
+        });
+
+        // Imprimir las citas atendidas
+        cout << "Pacientes atendidos entre " << fechaInicio << " y " << fechaFin << ":\n";
+        for (const auto& cita : atendidas) {
+            cout << "Fecha y Hora: " << cita.fechaHora << " | Paciente: " << cita.paciente->nombre << " | Especialidad: " << cita.especialidad << "\n";
+        }
+    }
+
+    static void marcarCitaComoAtendida(vector<CitaMedica>& citas) {
+        string idCita;
+        cout << "Ingrese el ID de la cita para marcar como atendida: ";
+        cin.ignore(); // Para limpiar el buffer de entrada
+        getline(cin, idCita);
+
+        bool encontrada = false;
+        for (auto& cita : citas) {
+            if (cita.id == idCita) {
+                if (cita.estado == "pendiente") {
+                    cita.estado = "atendida";
+                    cout << "La cita con ID " << idCita << " ha sido marcada como atendida.\n";
+                }
+                else {
+                    cout << "La cita con ID " << idCita << " no estaba pendiente.\n";
+                }
+                encontrada = true;
+                break;
+            }
+        }
+
+        if (!encontrada) {
+            cout << "No se encontro una cita pendiente con el ID especificado.\n";
+        }
     }
 };
+
+// Función para obtener la hora actual como cadena en formato "YYYY-MM-DD HH:MM"
+string obtenerHoraActual() {
+    time_t ahora = time(0);
+    tm* tiempoLocal = localtime(&ahora);
+    char buffer[20];
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M", tiempoLocal);
+    return string(buffer);
+}
 
 // Almacenamientos de ID y que sean únicos
 set<string> idGenerar;
@@ -167,29 +245,11 @@ string generarIDCita(Paciente* paciente) {
     return idCita;
 }
 
-// Clase para servicios
-class Servicios {
+// Clase para gestiones
+class Gestiones {
 public:
-    string nombre;
-    bool disponibilidad;
-    vector<CitaMedica> citas;
 
-    Servicios(string nombre, bool disponibilidad) : nombre(nombre), disponibilidad(disponibilidad) {}
-
-    void reportarServicios() {
-        cout << "Reportes servicios: \n";
-        getline(cin, nombre);
-        cin.ignore();
-    }
-
-    void pacientesAtendidos(string fechaInicio, string fechaFin) {
-        cout << "Pacientes atendidos entre " << fechaInicio << " y " << fechaFin << ":\n";
-        for (const auto& cita : citas) {
-            if (cita.fechaHora >= fechaInicio && cita.fechaHora <= fechaFin) {
-                cout << "- " << cita.paciente->nombre << "\n";
-            }
-        }
-    }
+    
 };
 
 // Submenús
@@ -546,7 +606,10 @@ void menuCitas(vector<CitaMedica>& citas, vector<Medico>& medicos, vector<Pacien
         cout << "3. Cancelar cita\n";
         cout << "4. Citas ordenadas por fecha o nivel de urgencia\n";
         cout << "5. Registro de citas completo\n";
-        cout << "6. Volver al menu principal\n";
+        cout << "6. Marcar citas pendientes como atendidas\n";
+        cout << "7. Lista citas pendientes por especialidad\n";
+        cout << "8. Lista pacientes atendidos entre un rango de fechas\n";
+        cout << "9. Volver al menu principal\n";
         cout << "Seleccione una opcion: ";
         cin >> opcion;
 
@@ -798,20 +861,103 @@ void menuCitas(vector<CitaMedica>& citas, vector<Medico>& medicos, vector<Pacien
             }
             break;
         }
-        case 6:
+        case 6: {
+            // Función para marcar una cita específica como atendida.
+            cout << "Marcar una cita que esta pendiente como atendida\n";
+            CitaMedica::marcarCitaComoAtendida(citas);
+            break;
+        }
+        case 7: {
+            vector<string> especialidades = {
+                "Alergologia", "Anatomia Patologica", "Anestesiologia y Reanimacion",
+                "Angiologia y Cirugia Vascular", "Aparato Digestivo", "Cardiologia",
+                "Cirugia Cardiovascular", "Cirugia General y del Aparato Digestivo",
+                "Cirugia Oral y Maxilofacial", "Cirugia Ortopedica y Traumatologia",
+                "Cirugia Pediatrica", "Cirugia Plastica, Estetica y Reparadora",
+                "Cirugía Toracica", "Dermatologia Medico-Quirurgica y Venereologia",
+                "Endocrinologia y Nutricion", "Farmacologia Clinica", "Geriatria",
+                "Hematologia y Hemoterapia", "Inmunologia", "Medicina del Trabajo",
+                "Medicina Familiar y Comunitaria", "Medicina Fisica y Rehabilitacion",
+                "Medicina Intensiva", "Medicina Interna", "Medicina Nuclear",
+                "Medicina Preventiva y Salud Publica", "Nefrologia", "Neumologia",
+                "Neurocirugia", "Neurofisiologia Clinica", "Neurologia",
+                "Obstetricia y Ginecologia", "Oftalmologia", "Oncologia Medica",
+                "Oncología Radioterapica", "Otorrinolaringologia",
+                "Pediatria y sus Areas Especificas", "Psiquiatria", "Radiodiagnostico",
+                "Reumatologia", "Urologia"
+            };
+
+            cout << "Seleccione una especialidad de la lista:\n";
+            for (size_t i = 0; i < especialidades.size(); ++i) {
+                cout << i + 1 << ". " << especialidades[i] << "\n";
+            }
+
+            // Leer la selección del usuario
+            int opcion;
+            cout << "Ingrese el numero de la especialidad: ";
+            cin >> opcion;
+
+            // Validar la opción seleccionada
+            if (opcion < 1 || opcion > static_cast<int>(especialidades.size())) {
+                cout << "Opcion invalida. Intentelo de nuevo.\n";
+                break;
+            }
+
+            // Obtener la especialidad seleccionada
+            string especialidadSeleccionada = especialidades[opcion - 1];
+
+            // Llamar a la función con la especialidad seleccionada
+            CitaMedica::listarCitasPendientesPorEspecialidad(citas, especialidadSeleccionada);
+            break;
+        }
+        case 8: {
+            // Función para listar pacientes atendidos entre fechas.
+            string fechaInicio, fechaFin;
+            cout << "Ingrese la fecha de inicio (YYYY-MM-DD): ";
+            cin.ignore();
+            getline(cin, fechaInicio);
+            cout << "Ingrese la fecha de fin (YYYY-MM-DD): ";
+            getline(cin, fechaFin);
+            CitaMedica::listarPacientesAtendidosEntreFechas(citas, fechaInicio, fechaFin);
+            break;
+        }
+        case 9:
             break;
         default:
             cout << "Opcion no valida.\n";
         }
-    } while (opcion != 6);
+    } while (opcion != 9);
 }
+
+// Menú gestiones
+/* void menuGestiones(Gestiones Gestiones) {
+    short int opcion;
+    do {
+        cout << "--- Menu servicios ---\n";
+        cout << "1. Hacer backups\n";
+        cout << "2. Por si acaso falta algo\n";
+        cout << "3. Volver al menu principal\n";
+        cout << "Seleccione una opcion: ";
+        cin >> opcion;
+
+        switch (opcion) {
+        case 1: {
+         
+        }
+        case 2: {
+           
+        }
+        case 3: {
+           
+        }
+        */
 
 // Menú opciones
 void menuPrincipal() {
     vector<Paciente> pacientes;
     vector<Medico> medicos;
     vector<CitaMedica> citas;
-    Servicios servicios("Hospital central", true);
+    Gestiones Gestiones;
 
     int opcion;
     do {
@@ -826,7 +972,7 @@ void menuPrincipal() {
 
         switch (opcion) {
         case 1:
-            menuPacientes(pacientes);
+            menuPacientes(pacientes); 
             break;
         case 2:
             menuMedicos(medicos);
@@ -835,7 +981,7 @@ void menuPrincipal() {
             menuCitas(citas, medicos, pacientes);
             break;
         case 4:
-            // menuServicios(servicios);
+            // menuGestiones(gestiones);
             break;
         case 5:
             cout << "Saliendo del programa.\n";
