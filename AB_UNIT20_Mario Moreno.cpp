@@ -437,7 +437,7 @@ public:
 };
 
 // Función para obtener la hora actual como cadena en formato "YYYY-MM-DD HH:MM"
-string obtenerHoraActual() {
+static string obtenerHoraActual() {
     time_t ahora = time(0);
     tm* tiempoLocal = localtime(&ahora);
     char buffer[20];
@@ -958,14 +958,14 @@ void menuCitas(vector<CitaMedica>& citas, vector<Medico>& medicos, vector<Pacien
                 cout << "Citas pasadas:\n";
                 for (const auto& cita : citas) {
                     if (cita.fechaHora < currentDate)
-                        cout << "ID: " << cita.id << " - Fecha: " << cita.fechaHora << " - Paciente: " << cita.paciente->nombre << endl;
+                        cout << "ID: " << cita.id << " - Fecha: " << cita.fechaHora << " - Paciente: " << cita.paciente->nombre << " - Medico: " << cita.medico->nombre << " | Especialidad: " << cita.especialidad << endl;
                 }
             }
             else if (subopciones == 2) {
                 cout << "Citas futuras:\n";
                 for (const auto& cita : citas) {
                     if (cita.fechaHora >= currentDate)
-                        cout << "ID: " << cita.id << " - Fecha: " << cita.fechaHora << " - Paciente: " << cita.paciente->nombre << " - Medico: " << cita.medico->nombre << endl;
+                        cout << "ID: " << cita.id << " - Fecha: " << cita.fechaHora << " - Paciente: " << cita.paciente->nombre << " - Medico: " << cita.medico->nombre << " | Especialidad: " << cita.especialidad << endl;
                 }
             }
             else {
