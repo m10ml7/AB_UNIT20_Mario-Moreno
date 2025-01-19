@@ -351,13 +351,13 @@ public:
 
     void modificarCita() {
         cout << "Modificar datos de la cita.\n";
-        cout << "Nueva fecha y hora: ";
+        cout << "Nueva fecha y hora (YYYY-MM-DD HH:MM): ";
         cin.ignore();
         getline(cin, fechaHora);
         cout << "Nuevo nivel de urgencia (1-5): ";
         cin >> nivelUrgencia;
     }
-
+    
     static void ordenarCitas(vector<CitaMedica>& citas) {
         sort(citas.begin(), citas.end(), [](CitaMedica& a, CitaMedica& b) {
             if (a.fechaHora != b.fechaHora)
@@ -366,46 +366,56 @@ public:
         });
     }
 
-    static void listarCitasPendientesPorEspecialidad(vector<CitaMedica>& citas, const string& horaActual) {
-        // Actualizar el estado de citas según la hora actual
+    static void listarCitasPendientesPorEspecialidad(vector<CitaMedica>& citas, const string& especialidad) {
+        // Filtrar citas pendientes por la especialidad seleccionada
+        vector<CitaMedica> pendientes;
         for (auto& cita : citas) {
-            if (cita.estado == "pendiente" && horaActual > cita.fechaHora) {
-                cita.estado = "expirada";
+            if (cita.especialidad == especialidad && cita.estado == "pendiente") {
+                pendientes.push_back(cita);
             }
         }
 
-        // Filtrar y ordenar las citas pendientes por especialidad
-        vector<CitaMedica> pendientes;
-        copy_if(citas.begin(), citas.end(), back_inserter(pendientes), [](CitaMedica& cita) {
-            return cita.estado == "pendiente";
-        });
+        // Ordenar las citas pendientes por fecha y hora
+        sort(pendientes.begin(), pendientes.end(), [](const CitaMedica& a, const CitaMedica& b) {
+            return a.fechaHora < b.fechaHora;
+            });
 
-        sort(pendientes.begin(), pendientes.end(), [](CitaMedica& a, CitaMedica& b) {
-            return a.especialidad < b.especialidad;
-        });
-
-        // Imprimir las citas pendientes
-        cout << "Citas pendientes por especialidad:\n";
-        for (const auto& cita : pendientes) {
-            cout << "ID: " << cita.id << " | Especialidad: " << cita.especialidad << " | Fecha y Hora: " << cita.fechaHora << " | Paciente: " << cita.paciente->nombre << "\n";
+        // Mostrar las citas pendientes por especialidad
+        cout << "Citas pendientes para la especialidad " << especialidad << ":\n";
+        if (pendientes.empty()) {
+            cout << "No hay citas pendientes para esta especialidad.\n";
+        }
+        else {
+            for (const auto& cita : pendientes) {
+                cout << "ID: " << cita.id << " | Fecha y Hora: " << cita.fechaHora
+                    << " | Paciente: " << cita.paciente->nombre << "\n";
+            }
         }
     }
 
     static void listarPacientesAtendidosEntreFechas(const vector<CitaMedica>& citas, const string& fechaInicio, const string& fechaFin) {
-        // Filtrar y ordenar las citas atendidas dentro del rango de fechas
+        // Filtrar citas atendidas dentro del rango de fechas
         vector<CitaMedica> atendidas;
-        copy_if(citas.begin(), citas.end(), back_inserter(atendidas), [&](const CitaMedica& cita) {
-            return cita.estado == "atendida" && cita.fechaHora >= fechaInicio && cita.fechaHora <= fechaFin;
-        });
+        for (const auto& cita : citas) {
+            if (cita.estado == "atendida" && cita.fechaHora >= fechaInicio && cita.fechaHora <= fechaFin) {
+                atendidas.push_back(cita);
+            }
+        }
 
-        sort(atendidas.begin(), atendidas.end(), [](CitaMedica& a, CitaMedica& b) {
-            return a.fechaHora > b.fechaHora; // Más reciente a más antiguo
-        });
+        // Ordenar las citas atendidas por fecha y hora (reciente a más antiguo)
+        sort(atendidas.begin(), atendidas.end(), [](const CitaMedica& a, const CitaMedica& b) {
+            return a.fechaHora > b.fechaHora;
+            });
 
-        // Imprimir las citas atendidas
+        // Mostrar los pacientes atendidos
         cout << "Pacientes atendidos entre " << fechaInicio << " y " << fechaFin << ":\n";
-        for (const auto& cita : atendidas) {
-            cout << "Fecha y Hora: " << cita.fechaHora << " | Paciente: " << cita.paciente->nombre << " | Especialidad: " << cita.especialidad << "\n";
+        if (atendidas.empty()) {
+            cout << "No se encontraron citas atendidas en el rango de fechas proporcionado.\n";
+        }
+        else {
+            for (const auto& cita : atendidas) {
+                cout << "Fecha y Hora: " << cita.fechaHora << " | Paciente: " << cita.paciente->nombre << " | Especialidad: " << cita.especialidad << "\n";
+            }
         }
     }
 
@@ -738,8 +748,8 @@ void menuCitas(vector<CitaMedica>& citas, vector<Medico>& medicos, vector<Pacien
         cout << "3. Cancelar cita\n";
         cout << "4. Citas ordenadas por fecha o nivel de urgencia\n";
         cout << "5. Registro de citas completo\n";
-        cout << "6. Marcar citas pendientes como atendidas\n";
-        cout << "7. Lista citas pendientes por especialidad\n";
+        cout << "6. Lista citas pendientes por especialidad\n";
+        cout << "7. Marcar citas pendientes como atendidas\n";
         cout << "8. Lista pacientes atendidos entre un rango de fechas\n";
         cout << "9. Volver al menu principal\n";
         cout << "Seleccione una opcion: ";
@@ -974,12 +984,6 @@ void menuCitas(vector<CitaMedica>& citas, vector<Medico>& medicos, vector<Pacien
             break;
         }
         case 6: {
-            // Función para marcar una cita específica como atendida.
-            cout << "Marcar una cita que esta pendiente como atendida\n";
-            CitaMedica::marcarCitaComoAtendida(citas);
-            break;
-        }
-        case 7: {
             cout << "Seleccione una especialidad de la lista:\n";
             for (size_t i = 0; i < especialidades.size(); ++i) {
                 cout << i + 1 << ". " << especialidades[i] << "\n";
@@ -1001,6 +1005,12 @@ void menuCitas(vector<CitaMedica>& citas, vector<Medico>& medicos, vector<Pacien
 
             // Llamar a la función con la especialidad seleccionada
             CitaMedica::listarCitasPendientesPorEspecialidad(citas, especialidadSeleccionada);
+            break;
+        }
+        case 7: {
+            // Función para marcar una cita específica como atendida.
+            cout << "Marcar una cita que esta pendiente como atendida\n";
+            CitaMedica::marcarCitaComoAtendida(citas);
             break;
         }
         case 8: {
