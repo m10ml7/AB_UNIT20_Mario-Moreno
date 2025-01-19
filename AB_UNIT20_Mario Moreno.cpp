@@ -9,10 +9,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <set>
-#include <fstream>
-#include <sstream>
-#include <iomanip>
-
 
 using namespace std;
 
@@ -27,100 +23,9 @@ public:
     string enfermedad;
     vector<string> historialClinico;
 
+    // Constructor principal
     Paciente(string nombre, string apellidos, string dni, string fechaIngreso, string enfermedad = "")
         : nombre(nombre), apellidos(apellidos), dni(dni), fechaIngreso(fechaIngreso), enfermedad(enfermedad) {
-    }
-
-    static void mostrarPacientesDesdeCSV(const string& archivo) {
-        ifstream file(archivo);
-        if (!file.is_open()) {
-            cerr << "No se pudo abrir el archivo " << archivo << " para leer.\n";
-            return;
-        }
-
-        vector<Paciente> pacientes;
-        string linea;
-
-        // Leer el archivo línea por línea
-        while (getline(file, linea)) {
-            stringstream ss(linea);
-            string nombre, apellidos, dni, fechaIngreso, enfermedad;
-
-            // Leer los campos separados por comas
-            getline(ss, nombre, ',');
-            getline(ss, apellidos, ',');
-            getline(ss, dni, ',');
-            getline(ss, fechaIngreso, ',');
-            getline(ss, enfermedad);
-
-            pacientes.emplace_back(nombre, apellidos, dni, fechaIngreso, enfermedad);
-        }
-
-        file.close();
-
-        // Mostrar los pacientes en formato tabular
-        if (pacientes.empty()) {
-            cout << "No hay pacientes registrados en el archivo.\n";
-            return;
-        }
-
-        cout << left << setw(15) << "Nombre"
-            << setw(20) << "Apellidos"
-            << setw(15) << "DNI"
-            << setw(15) << "Fecha Ingreso"
-            << setw(20) << "Enfermedad" << "\n";
-        cout << string(85, '-') << "\n";
-
-        for (const auto& paciente : pacientes) {
-            cout << left << setw(15) << paciente.nombre
-                << setw(20) << paciente.apellidos
-                << setw(15) << paciente.dni
-                << setw(15) << paciente.fechaIngreso
-                << setw(20) << (paciente.enfermedad.empty() ? "N/A" : paciente.enfermedad) << "\n";
-        }
-    }
-
-    void guardarEnArchivoCSV(const string& archivo) const {
-        ofstream file(archivo, ios::app); // Abrir en modo "append" para agregar datos
-        if (!file.is_open()) {
-            cerr << "No se pudo abrir el archivo " << archivo << " para escribir.\n";
-            return;
-        }
-
-        file << nombre << "," << apellidos << "," << dni << "," << fechaIngreso << "," << enfermedad << "\n";
-        file.close();
-        cout << "Datos guardados en el archivo CSV correctamente.\n";
-    }
-
-    void modificarArchivoCSV(const string& archivo, const vector<Paciente>& pacientes) {
-        ofstream file(archivo, ios::trunc); // Sobreescribir el archivo con los nuevos datos
-        if (!file.is_open()) {
-            cerr << "No se pudo abrir el archivo " << archivo << " para escribir.\n";
-            return;
-        }
-
-        for (const auto& paciente : pacientes) {
-            file << paciente.nombre << "," << paciente.apellidos << "," << paciente.dni << "," << paciente.fechaIngreso << "," << paciente.enfermedad << "\n";
-        }
-
-        file.close();
-        cout << "Archivo CSV actualizado correctamente.\n";
-    }
-
-    static void leerArchivoCSV(const string& archivo) {
-        ifstream file(archivo);
-        if (!file.is_open()) {
-            cerr << "No se pudo abrir el archivo " << archivo << " para leer.\n";
-            return;
-        }
-
-        cout << "Contenido del archivo CSV:\n";
-        string linea;
-        while (getline(file, linea)) {
-            cout << linea << "\n";
-        }
-
-        file.close();
     }
 
     void modificarDatos(vector<Paciente>& pacientes) {
@@ -272,6 +177,30 @@ public:
             else {
                 registrarHistorial("Enfermedad cronica registrada: " + enfermedadCronica);
             }
+        }
+    }
+
+    void listarPacientes(const vector<Paciente>& pacientes) {
+        if (pacientes.empty()) {
+            cout << "No hay pacientes registrados.\n";
+            return;
+        }
+
+        cout << "--- Lista de Pacientes ---\n";
+        for (size_t i = 0; i < pacientes.size(); ++i) {
+            cout << "Paciente " << i + 1 << ":\n";
+            cout << "Nombre: " << pacientes[i].nombre << "\n";
+            cout << "Apellidos: " << pacientes[i].apellidos << "\n";
+            cout << "DNI: " << pacientes[i].dni << "\n";
+            cout << "Fecha de ingreso: " << pacientes[i].fechaIngreso << "\n";
+            cout << "Enfermedad: " << (pacientes[i].enfermedad.empty() ? "No especificada" : pacientes[i].enfermedad) << "\n";
+            cout << "Historial Clínico: " << (pacientes[i].historialClinico.empty() ? "No hay registros" : "") << "\n";
+            if (!pacientes[i].historialClinico.empty()) {
+                for (const string& registro : pacientes[i].historialClinico) {
+                    cout << "  - " << registro << "\n";
+                }
+            }
+            cout << "-------------------------\n";
         }
     }
 };
@@ -552,20 +481,20 @@ public:
 
 // Submenús
 // Menú paciente
-void menuPacientes(vector<Paciente>& pacientes, const string& archivoCSV) {
+void menuPacientes(vector<Paciente>& pacientes) {
     short int opcion;
     do {
-        cout << "--- Menú Pacientes ---\n";
+        cout << "--- Menu Pacientes ---\n";
         cout << "1. Registrar paciente\n";
         cout << "2. Modificar datos del paciente\n";
-        cout << "3. Dar de alta médica\n";
-        cout << "4. Dar de baja médica\n";
-        cout << "5. Registrar historial clínico\n";
-        cout << "6. Mostrar historial clínico\n";
-        cout << "7. Reporte enfermedad crónica\n";
-        cout << "8. Mostrar lista de pacientes\n"; // Nueva opción
-        cout << "9. Volver al menú principal\n";
-        cout << "Seleccione una opción: ";
+        cout << "3. Lista de pacientes\n";
+        cout << "4. Dar de alta medica\n";
+        cout << "5. Dar de baja medica\n";
+        cout << "6. Registrar historial clinico\n";
+        cout << "7. Mostrar historial clinico\n";
+        cout << "8. Reporte enfermedad cronica\n";
+        cout << "9. Volver al menu principal\n";
+        cout << "Seleccione una opcion: ";
         cin >> opcion;
 
         switch (opcion) {
@@ -588,18 +517,14 @@ void menuPacientes(vector<Paciente>& pacientes, const string& archivoCSV) {
                 cout << "Error: El DNI ingresado ya pertenece a otro paciente. Registro cancelado.\n";
             }
             else {
-                cout << "Ingrese fecha de ingreso (YYYY-MM-DD): ";
+                cout << "Ingrese fecha de ingreso (no si hay): ";
                 cin.ignore();
                 getline(cin, fechaIngreso);
                 cout << "Ingrese enfermedad (opcional): ";
+                cin.ignore();
                 getline(cin, enfermedad);
-
-                // Registrar paciente en el vector y en el archivo CSV
-                Paciente nuevoPaciente(nombre, apellidos, dni, fechaIngreso, enfermedad);
-                pacientes.push_back(nuevoPaciente);
-                nuevoPaciente.guardarEnArchivoCSV(archivoCSV);
-
-                cout << "Paciente registrado y guardado en archivo CSV.\n";
+                pacientes.emplace_back(nombre, apellidos, dni, fechaIngreso, enfermedad);
+                cout << "Paciente registrado.\n";
             }
             break;
         }
@@ -617,8 +542,16 @@ void menuPacientes(vector<Paciente>& pacientes, const string& archivoCSV) {
             break;
         }
         case 3: {
+            if (!pacientes.empty()) {
+                pacientes[0].listarPacientes(pacientes);
+            }
+            else {
+                cout << "No hay pacientes registrados.\n";
+            }
+        }
+        case 4: {
             string dni;
-            cout << "Ingrese el DNI del paciente para dar de alta médica: ";
+            cout << "Ingrese el DNI del paciente para dar de alta medica: ";
             cin >> dni;
             auto it = find_if(pacientes.begin(), pacientes.end(), [&dni](Paciente& p) { return p.dni == dni; });
             if (it != pacientes.end()) {
@@ -629,7 +562,7 @@ void menuPacientes(vector<Paciente>& pacientes, const string& archivoCSV) {
             }
             break;
         }
-        case 4: {
+        case 5: {
             string dni;
             cout << "Ingrese el DNI del paciente para dar de baja médica: ";
             cin >> dni;
@@ -642,7 +575,7 @@ void menuPacientes(vector<Paciente>& pacientes, const string& archivoCSV) {
             }
             break;
         }
-        case 5: {
+        case 6: {
             string dni, registro;
             cout << "Ingrese el DNI del paciente: ";
             cin >> dni;
@@ -658,7 +591,7 @@ void menuPacientes(vector<Paciente>& pacientes, const string& archivoCSV) {
             }
             break;
         }
-        case 6: {
+        case 7: {
             string dni;
             cout << "Ingrese el DNI del paciente: ";
             cin >> dni;
@@ -671,7 +604,7 @@ void menuPacientes(vector<Paciente>& pacientes, const string& archivoCSV) {
             }
             break;
         }
-        case 7: {
+        case 8: {
             string dni;
             cout << "Ingrese el DNI del paciente: ";
             cin >> dni;
@@ -684,10 +617,6 @@ void menuPacientes(vector<Paciente>& pacientes, const string& archivoCSV) {
             }
             break;
         }
-        case 8: {
-            Paciente::mostrarPacientesDesdeCSV(archivoCSV);
-            break;
-        }
         case 9:
             cout << "Volviendo al menú principal.\n";
             break;
@@ -696,7 +625,6 @@ void menuPacientes(vector<Paciente>& pacientes, const string& archivoCSV) {
         }
     } while (opcion != 9);
 }
-
 
 // Menú médicos
 void menuMedicos(vector<Medico>& medicos) {
@@ -1126,8 +1054,6 @@ void menuPrincipal() {
     vector<Paciente> pacientes;
     vector<Medico> medicos;
     vector<CitaMedica> citas;
-    Gestiones Gestiones;
-    string archivoCSV = "pacientes.csv"; // Ruta al archivo CSV
 
     int opcion;
     do {
@@ -1142,7 +1068,7 @@ void menuPrincipal() {
 
         switch (opcion) {
         case 1:
-            menuPacientes(pacientes, archivoCSV); 
+            menuPacientes(pacientes); 
             break;
         case 2:
             menuMedicos(medicos);
@@ -1165,33 +1091,5 @@ void menuPrincipal() {
 // Main
 int main() {
     menuPrincipal();
-    vector<Paciente> pacientes;
-    string archivoCSV = "pacientes.csv";
-
-    // Crear pacientes
-    Paciente paciente1("Juan", "Perez", "12345678A", "2025-01-14", "Gripe");
-    Paciente paciente2("Maria", "Lopez", "87654321B", "2025-01-13", "Faringitis");
-
-    pacientes.push_back(paciente1);
-    pacientes.push_back(paciente2);
-
-    // Guardar pacientes en archivo CSV
-    for (const auto& paciente : pacientes) {
-        paciente.guardarEnArchivoCSV(archivoCSV);
-    }
-
-    // Leer archivo CSV para verificar
-    Paciente::leerArchivoCSV(archivoCSV);
-
-    // Modificar datos de un paciente
-    pacientes[0].nombre = "Juan Carlos";
-    pacientes[0].enfermedad = "Covid-19";
-
-    // Actualizar archivo CSV con nuevos datos
-    paciente1.modificarArchivoCSV(archivoCSV, pacientes);
-
-    // Leer archivo CSV nuevamente para verificar los cambios
-    Paciente::leerArchivoCSV(archivoCSV);
-
     return 0;
 }
