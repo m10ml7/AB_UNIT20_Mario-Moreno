@@ -22,10 +22,10 @@ public:
     string fechaIngreso;
     string enfermedad;
     vector<string> historialClinico;
-
+    
     // Constructor principal
-    Paciente(string nombre, string apellidos, string dni, string fechaIngreso, string enfermedad = "")
-        : nombre(nombre), apellidos(apellidos), dni(dni), fechaIngreso(fechaIngreso), enfermedad(enfermedad) {
+    Paciente(string nombre, string apellidos, string dni, string fechaIngreso, string enfermedad = "", vector<string> historialClinico = {})
+        : nombre(nombre), apellidos(apellidos), dni(dni), fechaIngreso(fechaIngreso), enfermedad(enfermedad), historialClinico(historialClinico) {
     }
 
     void modificarDatos(vector<Paciente>& pacientes) {
@@ -233,8 +233,8 @@ public:
     string especialidad;
     bool disponible;
 
-    Medico(string nombre, string apellidos, string dni, bool disponible)
-        : nombre(nombre), apellidos(apellidos), dni(dni), disponible(disponible) {
+    Medico(string nombre, string apellidos, string dni, bool disponible, string especialidad = "")
+        : nombre(nombre), apellidos(apellidos), dni(dni), disponible(disponible), especialidad(especialidad) {
     }
 
     void modificarDatos(vector<Medico>& medicos) {
@@ -343,6 +343,8 @@ public:
     Paciente* paciente;
     short int nivelUrgencia;
     string estado; // Puede ser "pendiente" o "atendida"
+    static set<string> idGenerar;
+    static vector<string> especialidades;
 
     CitaMedica(string id, string fechaHora, string especialidad, Medico* medico, Paciente* paciente, short int nivelUrgencia)
         : id(id), fechaHora(fechaHora), especialidad(especialidad), medico(medico), paciente(paciente), nivelUrgencia(nivelUrgencia), estado("pendiente") {}
@@ -472,13 +474,6 @@ string generarIDCita(Paciente* paciente) {
     return idCita;
 }
 
-// Clase para gestiones
-class Gestiones {
-public:
-
-    
-};
-
 // Submenús
 // Menú paciente
 void menuPacientes(vector<Paciente>& pacientes) {
@@ -548,6 +543,7 @@ void menuPacientes(vector<Paciente>& pacientes) {
             else {
                 cout << "No hay pacientes registrados.\n";
             }
+            break;
         }
         case 4: {
             string dni;
@@ -1026,34 +1022,85 @@ void menuCitas(vector<CitaMedica>& citas, vector<Medico>& medicos, vector<Pacien
     } while (opcion != 9);
 }
 
-// Menú gestiones
-/* void menuGestiones(Gestiones Gestiones) {
-    short int opcion;
-    do {
-        cout << "--- Menu servicios ---\n";
-        cout << "1. Hacer backups\n";
-        cout << "2. Por si acaso falta algo\n";
-        cout << "3. Volver al menu principal\n";
-        cout << "Seleccione una opcion: ";
-        cin >> opcion;
+// Ejemplos de pacientes, medicos y citas
+void inicializarEjemplos(vector<Paciente>& pacientes, vector<Medico>& medicos, vector<CitaMedica>& citas) {
+    pacientes = {
+        {"Juan", "Perez Garcia", "12345678A", "2025-01-01", "Alergia", {"Alergia a fruto secos"}},
+        {"Maria", "Lopez Hernandez", "23456789B", "2025-01-02", "Asma", {"Control de asma: receta de inhalador"}},
+        {"Carlos", "Fernandez Gomez", "34567890C", "2025-01-03", "Diabetes", {"Diagnostico inicial: diabetes tipo 2"}},
+        {"Ana", "Martinez Ruiz", "45678901D", "2025-01-04", "Hipertension", {"Consulta: padece presion arterial elavada"}},
+        {"Pedro", "Gonzalez Sanchez", "56789012E", "2025-01-05", "Migraña", {"Tiene un tratamiento con analgesicos"}},
+        {"Laura", "Hernandez Perez", "67890123F", "2025-01-06", "Artritis", {"Evaluacion inicial de articulaciones: manos con mayor dolor"}},
+        {"Luis", "Garcia Torres", "78901234G", "2025-01-07", "", {}},
+        {"Carmen", "Ruiz Romero", "89012345H", "2025-01-08", "Depresion", {"Primera consulta: inicio de terapia psicologica"}},
+        {"Raul", "Sanchez Diaz", "90123456I", "2025-01-09", "Alergia", {"Control de alergias: prescripcion de antihistaminicos"}},
+        {"Sara", "Gomez Castillo", "01234567J", "2025-01-10", "Cancer", {"Diagnostico inicial: derivacion a oncologia"}},
+        { "Sofia", "Nunez Fernandez", "11223344A", "2025-01-11", "", {} },
+        {"Daniel", "Ortiz Perez", "22334455B", "", "", {}},
+        {"Lucia", "Ramirez Lopez", "33445566C", "", "", {}},
+        {"Alejandro", "Morales Gomez", "44556677D", "", "", {}},
+        {"Paula", "Diaz Torres", "55667788E", "", "", {}},
+        {"Adrian", "Santos Sanchez", "66778899F", "", "", {}},
+        {"Isabel", "Castro Martinez", "77889900G", "", "", {}},
+        {"Miguel", "Reyes Hernandez", "88990011H", "", "", {}},
+        {"Elena", "Vargas Ruiz", "99001122I", "", "", {}},
+        {"Jorge", "Fuentes Garcia", "00112233J", "", "", {}}
+    };
 
-        switch (opcion) {
-        case 1: {
-         
-        }
-        case 2: {
-           
-        }
-        case 3: {
-           
-        }
-        */
+    medicos = {
+        {"Dr. Jose", "Martinez Lopez", "11223344K", true, "Alergologia"},
+        {"Dra. Andrea", "Garcia Hernandez", "22334455L", false, "Anatomia Patologica"},
+        {"Dr. Mario", "Fernandez Ruiz", "33445566M", true, "Anestesiologia y Reanimacion"},
+        {"Dra. Lucia", "Lopez Torres", "44556677N", true, "Angiologia y Cirugia Vascular"},
+        {"Dr. Javier", "Gomez Sanchez", "55667788O", true, "Aparato Digestivo"},
+        {"Dra. Elena", "Ruiz Perez", "66778899P", true, "Cardiologia"},
+        {"Dr. Alvaro", "Hernandez Diaz", "77889900Q", true, "Psiquiatria"},
+        {"Dra. Clara", "Martinez Garcia", "88990011R", true, "Medicina Interna"},
+        {"Dr. Pablo", "Sanchez Romero", "99001122S", true, "Cirugia Oral y Maxilofacial"},
+        {"Dra. Ines", "Gonzalez Castillo", "00112233T", true, "Cirugia Ortopedica y Traumatologia"},
+        {"Dr. Roberto", "Morales Diaz", "12345001X", true, "Oncologia Medica"},
+        {"Dra. Laura", "Torres Gomez", "23456002Y", true, "Cirugia Plastica, Estetica y Reparadora"},
+        {"Dr. Sergio", "Campos Ortega", "34567003Z", false, "Cirugia Toracica"},
+        {"Dra. Patricia", "Reyes Fuentes", "45678004W", true, "Dermatologia Medico-Quirurgica y Venereologia"},
+        {"Dr. Diego", "Martin Rivera", "56789005V", true, "Endocrinologia y Nutricion"},
+        {"Dra. Rosa", "Cabrera Leon", "67890106U", true, "Farmacologia Clinica"},
+        {"Dr. Manuel", "Navarro Vega", "78901207T", false, "Geriatria"},
+        {"Dra. Isabel", "Ramirez Sanchez", "89012308S", true, "Hematologia y Hemoterapia"},
+        {"Dr. Juan", "Ortega Blanco", "90123409R", true, "Inmunologia"},
+        {"Dra. Marta", "Vega Cruz", "01234510Q", true, "Medicina Fisica y Rehabilitacion"},
+        { "Dr. Mario", "Moreno Lopez", "01234510Z", true, "Neurologia" }
+    };
+
+    citas = {
+        {"C1", "2025-01-11 09:00", "Alergologia", &medicos[0], &pacientes[0], 3},
+        {"C2", "2025-01-12 10:00", "Alergologia", &medicos[0], &pacientes[8], 4},
+        {"C3", "2025-01-13 11:00", "Anestesiologia y Reanimacion", &medicos[2], &pacientes[10], 2},
+        {"C4", "2025-01-14 12:00", "Angiologia y Cirugia Vascular", &medicos[3], &pacientes[6], 5},
+        {"C5", "2025-01-15 13:00", "Aparato Digestivo", &medicos[4], &pacientes[11], 1},
+        {"C6", "2025-01-16 09:00", "Cardiologia", &medicos[5], &pacientes[3], 3},
+        {"C7", "2025-01-17 10:00", "Psiquiatria", &medicos[6], &pacientes[7], 4},
+        {"C8", "2025-01-18 11:00", "Medicina Interna", &medicos[7], &pacientes[2], 2},
+        {"C9", "2025-01-19 12:00", "Cirugia Oral y Maxilofacial", &medicos[8], &pacientes[12], 5},
+        {"C10", "2025-01-20 13:00", "Cirugia Ortopedica y Traumatologia", &medicos[9], &pacientes[13], 1},
+        {"C11", "2025-01-21 09:00", "Oncologia Medica", &medicos[10], &pacientes[9], 3},
+        {"C12", "2025-01-22 10:00", "Cirugia Plastica, Estetica y Reparadora", &medicos[11], &pacientes[14], 4},
+        {"C13", "2025-01-23 11:00", "Inmunologia", &medicos[18], &pacientes[15], 2},
+        {"C14", "2025-01-24 12:00", "Dermatologia Medico-Quirurgica y Venereologia", &medicos[13], &pacientes[19], 5},
+        {"C15", "2025-01-25 13:00", "Endocrinologia y Nutricion", &medicos[14], &pacientes[4], 1},
+        {"C16", "2025-01-26 09:00", "Farmacologia Clinica", &medicos[15], &pacientes[1], 3},
+        {"C17", "2025-01-27 10:00", "Neurologia", &medicos[20], &pacientes[16], 4},
+        {"C18", "2025-01-28 11:00", "Hematologia y Hemoterapia", &medicos[17], &pacientes[17], 2},
+        {"C19", "2025-01-29 12:00", "Inmunologia", &medicos[18], &pacientes[18], 5},
+        {"C20", "2025-01-30 13:00", "Medicina Fisica y Rehabilitacion", &medicos[19], &pacientes[5], 2}
+    };
+}
 
 // Menú opciones
 void menuPrincipal() {
     vector<Paciente> pacientes;
     vector<Medico> medicos;
     vector<CitaMedica> citas;
+    inicializarEjemplos(pacientes, medicos, citas);
 
     int opcion;
     do {
@@ -1061,8 +1108,7 @@ void menuPrincipal() {
         cout << "1. Gestionar pacientes\n";
         cout << "2. Gestionar medicos\n";
         cout << "3. Gestionar citas medicas\n";
-        cout << "4. Gestiones varias (sin uso de momento)\n";
-        cout << "5. Salir\n";
+        cout << "4. Salir\n";
         cout << "Seleccione una opcion: ";
         cin >> opcion;
 
@@ -1077,15 +1123,12 @@ void menuPrincipal() {
             menuCitas(citas, medicos, pacientes);
             break;
         case 4:
-            // menuGestiones(gestiones);
-            break;
-        case 5:
             cout << "Saliendo del programa.\n";
             break;
         default:
             cout << "Opción no válida.\n";
         }
-    } while (opcion != 5);
+    } while (opcion != 4);
 }
 
 // Main
